@@ -220,10 +220,14 @@ jobs:
             -storepass $STORE_PASS -keypass $ALIAS_PASS \
             -dname "CN=User,OU=,O=,L=,S=,C=US"
 
-      - name: Change App ID (Third Version - Mod)
+      - name: Change App ID (Hahamod Version)
         run: |
-          find . -type f -name "build.gradle" -exec sed -i 's/"tw.nekomimi.nekogram"/"tw.nekomimi.nekogram.mod"/g' {} +
-          sed -i 's/>Nagram</>Nagram-Mod</g' TMessagesProj/src/main/res/values/strings.xml
+          # 暴力替換包名
+          find . -type f -name "build.gradle" -exec sed -i 's/applicationId "tw.nekomimi.nekogram"/applicationId "tw.nekomimi.nekogram.hahamod"/g' {} +
+          # 替換桌面顯示名稱
+          sed -i 's/>Nagram</>Nagram-Hahamod</g' TMessagesProj/src/main/res/values/strings.xml
+          # 替換 AndroidManifest 裡的 provider，防止多開衝突閃退
+          find . -type f -name "AndroidManifest.xml" -exec sed -i 's/tw.nekomimi.nekogram.provider/tw.nekomimi.nekogram.hahamod.provider/g' {} +
 
       - name: Configure Gradle
         run: |
@@ -245,5 +249,5 @@ jobs:
       
       - uses: actions/upload-artifact@v4
         with:
-          name: Release
+          name: Release_Hahamod_Final
           path: ${{ env.APK }}
