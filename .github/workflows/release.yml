@@ -1,4 +1,4 @@
-name: Release Build
+name: Release Build (AFK)
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - '**.md'
       - '.github/**'
-      - '!.github/workflows/release.yml'
+      - '!.github/workflows/release-afk.yml'
   workflow_dispatch:
     inputs:
       upload:
@@ -206,7 +206,6 @@ jobs:
           path: |
             TMessagesProj/src/main/libs
           key: ${{ hashFiles('TMessagesProj/jni/**', 'ffmpeg_status', 'boringssl_status') }}-arm64-v8a
-
       - name: Generate Keystore
         run: |
           DECODED=$(echo "${{ secrets.LOCAL_PROPERTIES }}" | base64 -d)
@@ -219,16 +218,11 @@ jobs:
             -alias $ALIAS -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass $STORE_PASS -keypass $ALIAS_PASS \
             -dname "CN=User,OU=,O=,L=,S=,C=US"
-
-      - name: Change App ID (Hahamod Version)
+      - name: Change App ID (AFK Version)
         run: |
-          # 暴力替換包名
-          find . -type f -name "build.gradle" -exec sed -i 's/applicationId "tw.nekomimi.nekogram"/applicationId "tw.nekomimi.nekogram.hahamod"/g' {} +
-          # 替換桌面顯示名稱
-          sed -i 's/>Nagram</>Nagram-Hahamod</g' TMessagesProj/src/main/res/values/strings.xml
-          # 替換 AndroidManifest 裡的 provider，防止多開衝突閃退
-          find . -type f -name "AndroidManifest.xml" -exec sed -i 's/tw.nekomimi.nekogram.provider/tw.nekomimi.nekogram.hahamod.provider/g' {} +
-
+          find . -type f -name "build.gradle" -exec sed -i 's/applicationId "tw.nekomimi.nekogram"/applicationId "tw.nekomimi.nekogram.afk"/g' {} +
+          sed -i 's/>Nagram</>Nagram-AFK</g' TMessagesProj/src/main/res/values/strings.xml
+          find . -type f -name "AndroidManifest.xml" -exec sed -i 's/tw.nekomimi.nekogram.provider/tw.nekomimi.nekogram.afk.provider/g' {} +
       - name: Configure Gradle
         run: |
           sed -i "s/2000000000000/$(date +%s%3N)/g" gradle.properties
@@ -246,8 +240,7 @@ jobs:
           APK=$(find TMessagesProj/build/outputs/apk -name '*arm64-v8a*.apk')
           APK=$(dirname $APK)
           echo "APK=$APK" >> $GITHUB_ENV
-      
       - uses: actions/upload-artifact@v4
         with:
-          name: Release_Hahamod_Final
+          name: Release_AFK
           path: ${{ env.APK }}
