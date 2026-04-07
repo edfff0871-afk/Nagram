@@ -5708,16 +5708,8 @@ public class ChatActivityEnterView extends FrameLayout implements
             if (stickersDragging || stickersExpansionAnim != null) {
                 return false;
             }
-            if (!sendPlainEnabled && !isEditingMessage()) {
-                if (canvasButton == null) {
-                    canvasButton = new CanvasButton(this);
-                    canvasButton.setDelegate(() -> {
-                        showRestrictedHint();
-                    });
-                }
-                canvasButton.setRect(0, 0, getMeasuredWidth(), getMeasuredHeight());
-                return canvasButton.checkTouchEvent(event);
-            }
+            // [PATCH] Removed touch-event hijack that replaced the input with a "restricted" tap target.
+            // Now the field handles touches normally so the user can tap, long-press and select text.
             if (isPopupShowing() && event.getAction() == MotionEvent.ACTION_DOWN) {
                 if (searchingType != 0) {
                     setSearchingTypeInternal(0, false);
@@ -5927,9 +5919,8 @@ public class ChatActivityEnterView extends FrameLayout implements
 
         @Override
         public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
-            if (!sendPlainEnabled && !isEditingMessage()) {
-                return false;
-            }
+            // [PATCH] Allow focus even in restricted chats — needed for text selection.
+            // Original: returned false when sendPlainEnabled == false.
             onKeyboardShown();
             return super.requestFocus(direction, previouslyFocusedRect);
         }
@@ -7207,13 +7198,20 @@ public class ChatActivityEnterView extends FrameLayout implements
             return;
         }
         if (!sendPlainEnabled && !isEditingMessage()) {
+            // [PATCH] Allow input field to remain active even in restricted chats,
+            // so the user can still type and select text locally.
+            // Original code disabled the field entirely; we keep it enabled.
             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(" d " + getString("PlainTextRestrictedHint", R.string.PlainTextRestrictedHint));
             spannableStringBuilder.setSpan(new ColoredImageSpan(R.drawable.msg_mini_lock3), 1, 2, 0);
             messageEditText.setHintText(spannableStringBuilder, animated);
-            messageEditText.setText(null);
-            messageEditText.setEnabled(false);
-            messageEditText.setInputType(EditorInfo.IME_ACTION_NONE);
-            return;
+            // messageEditText.setText(null);        // [PATCH] keep any draft text
+            // messageEditText.setEnabled(false);    // [PATCH] do NOT disable — allow selection
+            // messageEditText.setInputType(EditorInfo.IME_ACTION_NONE); // [PATCH] keep keyboard
+            messageEditText.setEnabled(true);
+            if (messageEditText.getInputType() != commonInputType) {
+                messageEditText.setInputType(commonInputType);
+            }
+            // fall through so hint/icon update continues
         } else {
             messageEditText.setEnabled(true);
             if (messageEditText.getInputType() != commonInputType) {
@@ -13183,9 +13181,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             }
         }
-        if (!sendPlainEnabled && nextIcon == ChatActivityEnterViewAnimatedIconView.State.SMILE) {
-            nextIcon = ChatActivityEnterViewAnimatedIconView.State.GIF;
-        } else if (!stickersEnabled && nextIcon != ChatActivityEnterViewAnimatedIconView.State.SMILE) {
+        // [PATCH] Removed forced icon switch to GIF when sendPlainEnabled==false.
+        // The emoji button icon now follows the normal sticker/GIF page logic even in restricted chats.
+        if (!stickersEnabled && nextIcon != ChatActivityEnterViewAnimatedIconView.State.SMILE) {
             nextIcon = ChatActivityEnterViewAnimatedIconView.State.SMILE;
         }
 
