@@ -220,10 +220,10 @@ jobs:
             -storepass $STORE_PASS -keypass $ALIAS_PASS \
             -dname "CN=User,OU=,O=,L=,S=,C=US"
 
-      - name: Change App ID (Clone Version)
+      - name: Change App ID (Third Version - Mod)
         run: |
-          find . -type f -name "build.gradle" -exec sed -i 's/"tw.nekomimi.nekogram"/"tw.nekomimi.nekogram.afk"/g' {} +
-          sed -i 's/>Nagram</>Nagram-AFK</g' TMessagesProj/src/main/res/values/strings.xml
+          find . -type f -name "build.gradle" -exec sed -i 's/"tw.nekomimi.nekogram"/"tw.nekomimi.nekogram.mod"/g' {} +
+          sed -i 's/>Nagram</>Nagram-Mod</g' TMessagesProj/src/main/res/values/strings.xml
 
       - name: Configure Gradle
         run: |
