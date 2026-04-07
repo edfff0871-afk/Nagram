@@ -203,6 +203,20 @@ jobs:
           path: |
             TMessagesProj/src/main/libs
           key: ${{ hashFiles('TMessagesProj/jni/**', 'ffmpeg_status', 'boringssl_status') }}-arm64-v8a
+
+      - name: Generate Keystore
+        run: |
+          DECODED=$(echo "${{ secrets.LOCAL_PROPERTIES }}" | base64 -d)
+          STORE_PASS=$(echo "$DECODED" | grep KEYSTORE_PASS | cut -d= -f2 | tr -d '\r')
+          ALIAS=$(echo "$DECODED" | grep ALIAS_NAME | cut -d= -f2 | tr -d '\r')
+          ALIAS_PASS=$(echo "$DECODED" | grep ALIAS_PASS | cut -d= -f2 | tr -d '\r')
+          rm -f TMessagesProj/release.keystore
+          keytool -genkey -v \
+            -keystore TMessagesProj/release.keystore \
+            -alias $ALIAS -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass $STORE_PASS -keypass $ALIAS_PASS \
+            -dname "CN=User,OU=,O=,L=,S=,C=US"
+
       - name: Configure Gradle
         run: |
           sed -i "s/2000000000000/$(date +%s%3N)/g" gradle.properties
