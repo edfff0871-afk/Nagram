@@ -14325,6 +14325,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         setMenuItemIcon(false, true);
 
         boolean noforwards = messageObject != null && (MessagesController.getInstance(currentAccount).isPeerNoForwards(messageObject.getDialogId()) || (messageObject.messageOwner != null && messageObject.messageOwner.noforwards) || messageObject.hasRevealedExtendedMedia());
+        boolean noforwardsOverrideEarly = noforwards && !NekoXConfig.disableFlagSecure && !NaConfig.INSTANCE.getForceCopy().Bool();
         if (messageObject != null && messages == null) {
             if (messageObject.messageOwner != null && MessageObject.getMedia(messageObject.messageOwner) instanceof TLRPC.TL_messageMediaWebPage && MessageObject.getMedia(messageObject.messageOwner).webpage != null) {
                 TLRPC.WebPage webPage = MessageObject.getMedia(messageObject.messageOwner).webpage;
@@ -14377,7 +14378,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     needSearchImageInArr = false;
                 } else if (currentAnimation != null) {
                     needSearchImageInArr = false;
-                    if (messageObject.canForwardMessage() && !noforwards) {
+                    if (messageObject.canForwardMessage() && !noforwardsOverrideEarly) {
                         setItemVisible(sendNoQuoteItem, true, false);
                         setItemVisible(sendItem, true, false);
                     }
@@ -14399,7 +14400,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         }
                         menuItem.showSubItem(gallery_menu_showall);
                     }
-                    setItemVisible(sendItem, !noforwards, false);
+                    setItemVisible(sendItem, !noforwardsOverrideEarly, false);
                     setItemVisible(sendNoQuoteItem, true, false);
                 } else if (isEmbedVideo && messageObject.eventId == 0) {
                     setItemVisible(sendNoQuoteItem, true, false);
@@ -15018,7 +15019,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
                 title = getString(R.string.AttachDocument);
             }
-            if (DialogObject.isEncryptedDialog(currentDialogId) && !isEmbedVideo || noforwards) {
+            if (DialogObject.isEncryptedDialog(currentDialogId) && !isEmbedVideo || noforwardsOverride) {
                 setItemVisible(sendItem, false, false);
             }
             if (isEmbedVideo || newMessageObject.messageOwner.ttl != 0 && newMessageObject.messageOwner.ttl < 60 * 60 || noforwardsOverride) {
@@ -17633,7 +17634,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 messageObject != null && (MessagesController.getInstance(currentAccount).isPeerNoForwardsWithOverride(messageObject.getDialogId()) ||
                 (messageObject.messageOwner != null && messageObject.messageOwner.noforwards)) || messageObject != null && messageObject.hasRevealedExtendedMedia()
             ) {
-                if (!NekoXConfig.disableFlagSecure)
+                if (!NekoXConfig.disableFlagSecure && !NaConfig.INSTANCE.getForceCopy().Bool())
                 windowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SECURE;
                 AndroidUtilities.logFlagSecure();
             } else {
